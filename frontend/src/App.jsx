@@ -12,9 +12,9 @@ export default function App() {
     <div className="h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 flex flex-col overflow-hidden">
       <div className="max-w-6xl mx-auto w-full flex flex-col flex-1 min-h-0">
         {/* Header */}
-        <div className="mb-4 text-center flex-shrink-0">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Mini Canva Multiplayer</h1>
-          <p className="text-gray-500 text-sm">Draw freely with smooth strokes and share your creations</p>
+        <div className="mb-3 sm:mb-4 text-center flex-shrink-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Signature.io</h1>
+          <p className="text-gray-500 text-xs sm:text-sm px-2">Draw freely with smooth strokes and share your signature</p>
         </div>
 
         {/* Toolbar */}

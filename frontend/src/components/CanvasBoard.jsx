@@ -58,16 +58,45 @@ export default function CanvasBoard({
     });
   }, [strokes, canvasRef]);
 
+  // Touch event handlers for mobile
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+    startDrawing(mouseEvent);
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+    draw(mouseEvent);
+  };
+
+  const handleTouchEnd = (e) => {
+    e.preventDefault();
+    endDrawing();
+  };
+
   return (
-    <div ref={containerRef} className="w-full h-full bg-gray-50 rounded-xl shadow-lg p-4 border border-gray-200 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-inner border border-gray-300 overflow-hidden w-full h-full">
+    <div ref={containerRef} className="w-full h-full min-h-[250px] sm:min-h-[300px] bg-gray-50 rounded-xl shadow-lg p-2 sm:p-4 border border-gray-200 flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-inner border border-gray-300 overflow-hidden w-full h-full touch-none">
         <canvas
           ref={canvasRef}
-          className="cursor-crosshair block w-full h-full"
+          className="cursor-crosshair block w-full h-full touch-none"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={endDrawing}
           onMouseLeave={endDrawing}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         />
       </div>
     </div>
