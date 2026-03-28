@@ -1,34 +1,49 @@
 import { useRef, useState } from "react";
+// import { socket } from "../socket";
 import { getMousePos } from "../utils/getMousePos";
 import { drawSmoothStroke } from "../utils/smoothPath";
-import { DRAW_STATES } from "../constants/drawStates";
+import { pointsToSmoothSVG } from "../utils/svgPath";
 
 export function useDraw(canvasRef) {
   const [strokes, setStrokes] = useState([]);
-  const [state, setState] = useState(DRAW_STATES.IDLE);
+  const [redoStack, setRedoStack] = useState([]);
+
+  const [color, setColor] = useState("black");
+  const [size, setSize] = useState(4);
 
   const currentStroke = useRef([]);
   const isDrawing = useRef(false);
 
-  const startDrawing = (e) => {
-    const canvas = canvasRef.current;
-    const pos = getMousePos(e, canvas);
+//   // receive from server
+//   useEffect(() => {
+//     socket.on("init", setStrokes);
+//     socket.on("draw", (stroke) => {
+//       setStrokes((prev) => [...prev, stroke]);
+//     });
 
+//     return () => {
+//       socket.off("init");
+//       socket.off("draw");
+//     };
+//   }, []);
+
+  const startDrawing = (e) => {
+    const pos = getMousePos(e, canvasRef.current);
     isDrawing.current = true;
-    currentStroke.current = [pos];
-    setState(DRAW_STATES.DRAWING);
+    currentStroke.current = [{ ...pos, color, size }];
   };
 
   const draw = (e) => {
     if (!isDrawing.current) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvasRef.current.getContext("2d");
+    const pos = getMousePos(e, canvasRef.current);
 
-    const pos = getMousePos(e, canvas);
-    currentStroke.current.push(pos);
+    currentStroke.current.push({ ...pos, color, size });
 
-    // redraw current stroke only
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size;
+
     drawSmoothStroke(ctx, currentStroke.current);
   };
 
@@ -36,10 +51,54 @@ export function useDraw(canvasRef) {
     if (!isDrawing.current) return;
 
     isDrawing.current = false;
-    setState(DRAW_STATES.IDLE);
 
-    setStrokes((prev) => [...prev, currentStroke.current]);
+    const stroke = currentStroke.current;
+
+    // socket.emit("draw", stroke);
+    setStrokes((prev) => [...prev, stroke]);
+    setRedoStack([]);
+
     currentStroke.current = [];
+  };
+
+  // 🔁 UNDO
+  const undo = () => {
+    if (strokes.length === 0) return;
+
+    const last = strokes[strokes.length - 1];
+    setRedoStack((prev) => [...prev, last]);
+    setStrokes((prev) => prev.slice(0, -1));
+  };
+
+  // 🔁 REDO
+  const redo = () => {
+    if (redoStack.length === 0) return;
+
+    const last = redoStack[redoStack.length - 1];
+    setStrokes((prev) => [...prev, last]);
+    setRedoStack((prev) => prev.slice(0, -1));
+  };
+
+  // 📤 EXPORT SVG
+  const exportSVG = () => {
+    const paths = strokes.map((stroke) => {
+      const d = pointsToSmoothSVG(stroke);
+      return `<path d="${d}" stroke="${stroke[0].color}" fill="none" stroke-width="${stroke[0].size}" />`;
+    });
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        ${paths.join("")}
+      </svg>
+    `;
+
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "drawing.svg";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return {
@@ -47,5 +106,12 @@ export function useDraw(canvasRef) {
     startDrawing,
     draw,
     endDrawing,
+    undo,
+    redo,
+    exportSVG,
+    color,
+    setColor,
+    size,
+    setSize,
   };
 }

@@ -1,18 +1,28 @@
+import { useRef } from "react";
+import CanvasBoard from "./components/CanvasBoard";
+import Toolbar from "./components/ToolBar";
+import { useDraw } from "./hooks/useDraw";
 
-import './App.css'
-import CanvasBoard from './components/CanvasBoard'
+export default function App() {
+  const canvasRef = useRef(null);
 
-function App() {
-  
+  const draw = useDraw(canvasRef);
 
   return (
-    <>
-      <div>
-      <h2>Mini Canva Draw</h2>
-      <CanvasBoard />
-    </div>
-    </>
-  )
-}
+    <div>
+      <h2>Mini Canva Multiplayer</h2>
 
-export default App
+      <Toolbar
+        undo={draw.undo}
+        redo={draw.redo}
+        exportSVG={draw.exportSVG}
+        color={draw.color}
+        setColor={draw.setColor}
+        size={draw.size}
+        setSize={draw.setSize}
+      />
+
+      <CanvasBoard canvasRef={canvasRef} {...draw} />
+    </div>
+  );
+}
